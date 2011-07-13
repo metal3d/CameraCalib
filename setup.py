@@ -9,5 +9,6 @@ setup(name='CalibrationCam',
       author_email='metal3d@gmail.com',
       packages=['calibration'],
       package_dir={'calibration': 'src/calibration'},
-      license='BSD'
+      license='BSD',
+      requires = ['cv','PyQt4']
      )
