@@ -1,0 +1,5 @@
+CameraCalib is a simple tool that gives focal length (in pixel) and distorsion paramaters from a movie file that captured a chessboard.
+
+This tool uses OpenCV and Qt, and is written in Python (2.7 for now). It's basically made to learn openCV calibration process, but became a tool that I use... 
+
+Documentation soon.
