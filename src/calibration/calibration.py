@@ -10,11 +10,13 @@ from PyQt4 import QtCore, QtGui
 
 
 
-NUMPOINT=40
 
 class Calibration:
     """Compute ChessBoard to calculate calibration
     """
+
+    #static var that keep the number of points to compute
+    NUMPOINT=40
 
     def __init__(self):
         self.prepare()
@@ -49,8 +51,7 @@ class Calibration:
             frame = cv.QueryFrame(capture)
             numframes +=1
 
-        step = int(numframes/NUMPOINT)
-        print "will take each %d on %d frales" % (step, numframes)
+        step = int(numframes/Calibration.NUMPOINT)
         capture = cv.CaptureFromFile(self.filename)
         frame = cv.QueryFrame(capture) #grab a frame to get some information
         self.framesize = (frame.width, frame.height)
@@ -61,7 +62,7 @@ class Calibration:
         f=0
         cv.NamedWindow("ChessBoard",cv.CV_WINDOW_NORMAL)
 
-        gui.setMessage("Analyzing movie... find chessCorner for %d frames" % NUMPOINT)
+        gui.setMessage("Analyzing movie... find chessCorner for %d frames" % Calibration.NUMPOINT)
 
         while frame:
             f+=1    
@@ -213,8 +214,15 @@ class GUI(QtGui.QWidget):
     def setMessage(self, message):
         """Simply to display messages on GUI
         """
-        self.messageLabel.setText(str(message))
+        self.message = str(message)
         self.app.processEvents()
+        QtCore.QTimer(self).singleShot(5,self._messageDelayed)
+        self.app.processEvents()
+
+    def _messageDelayed(self):
+        self.messageLabel.setText(self.message)
+        self.app.processEvents()
+        
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
