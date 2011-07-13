@@ -1,6 +1,9 @@
 #!/bin/env python
 #-*- coding: utf-8 -*-
 
+#Author: Patrice FERLET <metal3d@gmail.com>
+#License: BSD
+
 import sys
 from PyQt4 import QtCore, QtGui
 
