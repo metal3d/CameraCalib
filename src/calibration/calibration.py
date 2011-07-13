@@ -5,15 +5,23 @@
 #License: BSD
 
 import sys
+import cv
 from PyQt4 import QtCore, QtGui
 
-import cv, numpy, Image
 
 
 NUMPOINT=15
 
 class Calibration:
+    """Compute ChessBoard to calculate calibration
+    """
+
     def __init__(self):
+        self.prepare()
+
+    def prepare(self):
+        """Initialize vars
+        """
         self.filename = None
         self.chessSize = (9,6)
         self.nframe = 0
@@ -21,16 +29,21 @@ class Calibration:
         self.framesize = ()
 
     def setFile(self, filename):
+        """Keep filename to process and initialize class vars
+        """
         self.filename = "%s"  % filename
+        self.prepare() #new call on each new file to process
 
     def process(self, gui):
+        """Process file, find corners on chessboard and keep points
+        """
+        gui.setMessage("Analyzing movie... get frame count")
         
         #open capture file
         capture = cv.CaptureFromFile(self.filename)
-
-        #count... I know it sucks
-        gui.messageLabel.setText("Analyzing movie... get frame count")
         frame = cv.QueryFrame(capture)
+        
+        #count... I know it sucks
         numframes=1
         while frame:
             frame = cv.QueryFrame(capture)
@@ -48,7 +61,7 @@ class Calibration:
         f=0
         cv.NamedWindow("ChessBoard",cv.CV_WINDOW_NORMAL)
 
-        gui.messageLabel.setText("Analyzing movie... find chessCorner for %d frames" % NUMPOINT)
+        gui.setMessage("Analyzing movie... find chessCorner for %d frames" % NUMPOINT)
 
         while frame:
             f+=1    
@@ -71,6 +84,8 @@ class Calibration:
 
             cv.WaitKey(4)
             frame = cv.QueryFrame(capture) #grab a frame to get some information
+
+            #skip frames to get only NUMPOINT of point to calculate
             while f%step != 0 and frame:
                 f+=1
                 frame = cv.QueryFrame(capture)
@@ -78,12 +93,15 @@ class Calibration:
         self.points = points
         self.nframe = nframe
 
-        gui.messageLabel.setText("Analyze end, %d points found" % len(self.points))
+        gui.setMessage("Analyze end, %d points found" % len(self.points))
 
     def calcIntrasec(self, gui):
+        """Calculate focal and distortion from computed points
+        """
         count = len(self.points)
         numpoints = (self.chessSize[0]*self.chessSize[1])
 
+        #create matrices that are needed to compute calibration
         mat = cv.CreateMat(3,3,cv.CV_32FC1)
         distCoeffs = cv.CreateMat(4,1,cv.CV_32FC1)
         p3d = cv.CreateMat(count,3,cv.CV_32FC1) #compute 3D points
@@ -98,6 +116,7 @@ class Calibration:
         col = 0
         cv.Set(p3d,0.0) #to set every values to 0.0... and not set Z value
 
+        #this compute points in row and cols...
         for p in self.points:
             p2d[i,0] = p[0]
             p2d[i,1] = p[1]
@@ -112,8 +131,10 @@ class Calibration:
                     row = 0
             i+=1
 
+        #and now, calibrate...
         cv.CalibrateCamera2(p3d, p2d, pointCounts, self.framesize, mat, distCoeffs, rvecs, tvecs, flags=0)
-        gui.messageLabel.setText("Intrasinc camera parameters checked")
+        gui.setMessage("Intrasinc camera parameters checked")
+
         return (mat, distCoeffs)
 
 
@@ -138,12 +159,12 @@ class GUI(QtGui.QWidget):
         self.messageLabel = QtGui.QLabel("")
  
         #camera intrasec values
-        self.fxlabel = QtGui.QLabel('fx')
-        self.fylabel = QtGui.QLabel('fy')
-        self.dist1label = QtGui.QLabel('d1')
-        self.dist2label = QtGui.QLabel('d2')
-        self.dist3label = QtGui.QLabel('d3')
-        self.dist4label = QtGui.QLabel('d4')
+        self.fxlabel = QtGui.QLabel('focal x')
+        self.fylabel = QtGui.QLabel('focal y')
+        self.dist1label = QtGui.QLabel('K1')
+        self.dist2label = QtGui.QLabel('K2')
+        self.dist3label = QtGui.QLabel('P1')
+        self.dist4label = QtGui.QLabel('P2')
 
         #set layout
         self.grid = QtGui.QGridLayout()
@@ -157,9 +178,9 @@ class GUI(QtGui.QWidget):
         a(self.fxlabel, 3,0)
         a(self.fylabel, 3,1)
         a(self.dist1label, 4,0)
-        a(self.dist2label, 4,1)
-        a(self.dist3label, 4,2)
-        a(self.dist4label, 4,3)
+        a(self.dist2label, 5,0)
+        a(self.dist3label, 6,0)
+        a(self.dist4label, 7,0)
 
         self.setLayout(self.grid)
 
@@ -169,24 +190,35 @@ class GUI(QtGui.QWidget):
         self.connect(analyzeButton, QtCore.SIGNAL('clicked()'), self.startAnalyze)
 
     def onOpenFileClicked(self):
+        """Open the file selector and get selected movie
+        """
         fname = QtGui.QFileDialog.getOpenFileName(self, "Open File")
         self.calibration.setFile(fname)
         self.filelabel.setText(fname)
 
     def startAnalyze(self):
+        """Call analyze on Calibration object then set results on GUI
+        """
         c = self.calibration
         c.process(self)
         (cam, dist) = c.calcIntrasec(self)
 
-        self.fxlabel.setText("fx:" + str(cam[0,0]))
-        self.fylabel.setText("fy:" + str(cam[1,1]))
-        self.dist1label.setText(str(dist[0,0]))
-        self.dist2label.setText(str(dist[0,1]))
-        self.dist3label.setText(str(dist[0,2]))
-        self.dist4label.setText(str(dist[0,3]))
+        self.fxlabel.setText("Focal x: " + str(cam[0,0]))
+        self.fylabel.setText("Focal y: " + str(cam[1,1]))
+        self.dist1label.setText("K1: " + str(dist[0,0]))
+        self.dist2label.setText("K2: " + str(dist[1,0]))
+        self.dist3label.setText("P1: " + str(dist[2,0]))
+        self.dist4label.setText("P2: " + str(dist[3,0]))
+
+    def setMessage(self, message):
+        """Simply to display messages on GUI
+        """
+        self.messageLabel.setText(str(message))
+        self.app.processEvents()
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     calib = GUI()
+    calib.app = app
     calib.show()
     sys.exit(app.exec_())
