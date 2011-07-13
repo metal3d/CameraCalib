@@ -10,7 +10,7 @@ from PyQt4 import QtCore, QtGui
 
 
 
-NUMPOINT=15
+NUMPOINT=40
 
 class Calibration:
     """Compute ChessBoard to calculate calibration
@@ -31,8 +31,8 @@ class Calibration:
     def setFile(self, filename):
         """Keep filename to process and initialize class vars
         """
-        self.filename = "%s"  % filename
         self.prepare() #new call on each new file to process
+        self.filename = "%s"  % filename
 
     def process(self, gui):
         """Process file, find corners on chessboard and keep points
