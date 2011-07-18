@@ -1,6 +1,7 @@
 #!/bin/env python
-
-from calibration import GUI
+import sys
+from PyQt4 import QtGui
+from calibration.calibration import GUI
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
