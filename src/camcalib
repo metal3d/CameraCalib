@@ -1,0 +1,10 @@
+#!/bin/env python
+
+from calibration import GUI
+
+if __name__ == "__main__":
+    app = QtGui.QApplication(sys.argv)
+    calib = GUI()
+    calib.app = app
+    calib.show()
+    sys.exit(app.exec_())
