@@ -8,9 +8,6 @@ import sys
 import cv
 from PyQt4 import QtCore, QtGui
 
-
-
-
 class Calibration:
     """Compute ChessBoard to calculate calibration
     """
@@ -224,7 +221,7 @@ class GUI(QtGui.QWidget):
         self.app.processEvents()
         
 
-if __name__ == "__main__":
+if __name__ == "__main__":   
     app = QtGui.QApplication(sys.argv)
     calib = GUI()
     calib.app = app
