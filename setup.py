@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-
-from distutils.core import setup
-
+from setuptools import setup, find_packages
+import sys, os
 setup(name='CalibrationCam',
       version='0.1',
       description='Camera Calibration Tool',
@@ -10,5 +9,6 @@ setup(name='CalibrationCam',
       packages=['calibration'],
       package_dir={'calibration': 'src/calibration'},
       license='BSD',
-      requires = ['cv','PyQt4']
-     )
+      requires = ['cv','PyQt4'], 
+      scripts = ['src/camcalib']
+      )
